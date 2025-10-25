@@ -17,13 +17,25 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
-    - name: Read version from debian/changelog
+    - name: Calculate version (same logic as build workflow)
       id: version
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
-        # Extract version from debian/changelog (includes Debian revision)
-        VERSION=$(dpkg-parsechangelog -S Version)
+        # Read upstream version from VERSION file
+        UPSTREAM_VERSION=$(cat VERSION | sed 's/^v//')
+        echo "Upstream version: $UPSTREAM_VERSION"
+
+        # Find the next available revision number (same as build workflow)
+        REVISION=1
+        while gh release view "v${UPSTREAM_VERSION}-${REVISION}" &>/dev/null; do
+          echo "Release v${UPSTREAM_VERSION}-${REVISION} exists, trying next..."
+          REVISION=$((REVISION + 1))
+        done
+
+        VERSION="${UPSTREAM_VERSION}-${REVISION}"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "Found version: $VERSION"
+        echo "Calculated version: $VERSION"
 
     - name: Check if release exists and if it's published
       id: check_release
