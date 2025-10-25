@@ -44,6 +44,12 @@ jobs:
             echo "Already on latest version: $CURRENT"
           fi
 
+      - name: Install Debian packaging tools
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y devscripts
+
       - name: Update version files
         if: steps.compare.outputs.needs_update == 'true'
         run: |
