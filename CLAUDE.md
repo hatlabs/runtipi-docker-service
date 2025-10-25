@@ -89,16 +89,56 @@ sudo journalctl -u runtipi -f
 open http://localhost
 ```
 
-### Updating Runtipi Version
+### Version Management (Automated)
 
-1. Check latest version at https://github.com/runtipi/runtipi/releases
-2. Update `VERSION` file with new tag (e.g., `v3.8.2`)
-3. Update `debian/changelog`:
-   ```bash
-   dch --newversion 3.8.2 "Update to Runtipi v3.8.2"
-   ```
-4. Update `.bumpversion.cfg` current_version
-5. Rebuild package
+**Package versioning is fully automated** - you only need to update the `VERSION` file when tracking a new Runtipi release.
+
+**Version Format:**
+- Package versions follow Debian convention: `X.Y.Z-N`
+- `X.Y.Z`: Upstream Runtipi version (from VERSION file)
+- `-N`: Debian packaging revision (auto-incremented by CI)
+
+**How It Works:**
+
+The build workflow automatically:
+1. Reads the upstream version from the `VERSION` file (e.g., `v4.5.2`)
+2. Checks existing GitHub releases to find the next available revision number
+3. Generates `debian/changelog` with the auto-incremented version (e.g., `4.5.2-1`)
+4. Builds the package with that version
+5. Creates a draft release tagged as `v4.5.2-1`
+
+**When to Update VERSION File:**
+
+Update the `VERSION` file only when tracking a new Runtipi release:
+
+```bash
+# Check latest version at https://github.com/runtipi/runtipi/releases
+echo "v4.6.0" > VERSION
+git add VERSION
+git commit -m "Update to Runtipi v4.6.0"
+# Create PR, merge → build workflow creates v4.6.0-1
+```
+
+**Packaging Changes (No VERSION Update):**
+
+For packaging-only changes (e.g., fix systemd service, update dependencies):
+- Don't update the VERSION file
+- Just make your changes and create a PR
+- Build workflow will auto-increment the revision: `4.5.2-1` → `4.5.2-2`
+
+**Examples:**
+
+| Scenario | VERSION file | Last Release | New Version | Description |
+|----------|--------------|--------------|-------------|-------------|
+| New Runtipi version | `v4.6.0` | `v4.5.2-1` | `v4.6.0-1` | First packaging of 4.6.0 |
+| Packaging fix | `v4.5.2` | `v4.5.2-1` | `v4.5.2-2` | Fixed systemd service |
+| Another fix | `v4.5.2` | `v4.5.2-2` | `v4.5.2-3` | Updated dependencies |
+| New upstream again | `v4.7.0` | `v4.5.2-3` | `v4.7.0-1` | Track new release |
+
+**Notes:**
+- `debian/changelog` in git is overwritten during build (don't manually edit)
+- `.bumpversion.cfg` only tracks the `VERSION` file
+- Revision numbers ensure no conflicts even with multiple builds of same upstream version
 
 ### Testing on Remote Systems
 
