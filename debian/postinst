@@ -3,17 +3,18 @@ set -e
 
 case "$1" in
     configure)
-        # Create /opt/runtipi directory structure
-        mkdir -p /opt/runtipi/.internal/media
-        mkdir -p /opt/runtipi/.internal/state
-        mkdir -p /opt/runtipi/.internal/repos
-        mkdir -p /opt/runtipi/.internal/apps
-        mkdir -p /opt/runtipi/.internal/logs
-        mkdir -p /opt/runtipi/.internal/traefik
-        mkdir -p /opt/runtipi/.internal/user-config
-        mkdir -p /opt/runtipi/.internal/app-data
-        mkdir -p /opt/runtipi/.internal/backups
-        mkdir -p /opt/runtipi/.internal/cache
+        # Create /opt/runtipi directory structure (flat, matching official installer)
+        mkdir -p /opt/runtipi/media
+        mkdir -p /opt/runtipi/state
+        mkdir -p /opt/runtipi/repos
+        mkdir -p /opt/runtipi/apps
+        mkdir -p /opt/runtipi/logs
+        mkdir -p /opt/runtipi/traefik
+        mkdir -p /opt/runtipi/user-config
+        mkdir -p /opt/runtipi/app-data
+        mkdir -p /opt/runtipi/backups
+        mkdir -p /opt/runtipi/cache
+        mkdir -p /opt/runtipi/data
 
         # Create default .env file if it doesn't exist
         if [ ! -f /opt/runtipi/.env ]; then
