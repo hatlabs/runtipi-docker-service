@@ -28,8 +28,20 @@ override_dh_auto_build:
 	chmod +x runtipi-cli
 	# Download docker-compose.prod.yml and convert to use pre-built images
 	curl -L "$(RUNTIPI_COMPOSE_URL)" -o docker-compose.yml.tmp
-	# Use Python to replace the build section with image reference and set TIPI_VERSION
-	python3 -c 'import re; content = open("docker-compose.yml.tmp").read(); content = re.sub(r"(  runtipi:\n)    build:.*?(\n    depends_on:)", r"\1    image: ghcr.io/runtipi/runtipi:$(VERSION)\2", content, flags=re.DOTALL); content = re.sub(r"      - \./docker-compose\.prod\.yml:/data/docker-compose\.yml\n", "", content); content = re.sub(r"      LOCAL: true\n", "", content); content = re.sub(r"      TIPI_VERSION: 0\.0\.0\n", "      TIPI_VERSION: $(VERSION)\n", content); open("docker-compose.yml", "w").write(content)'
+	# Use Python to:
+	# 1. Replace build section with image reference
+	# 2. Remove .internal path defaults (use root directory instead)
+	# 3. Set TIPI_VERSION
+	python3 -c 'import re; \
+content = open("docker-compose.yml.tmp").read(); \
+content = re.sub(r"(  runtipi:\n)    build:.*?(\n    depends_on:)", r"\1    image: ghcr.io/runtipi/runtipi:$(VERSION)\2", content, flags=re.DOTALL); \
+content = re.sub(r"      - \./docker-compose\.prod\.yml:/data/docker-compose\.yml\n", "", content); \
+content = re.sub(r"      LOCAL: true\n", "", content); \
+content = re.sub(r"      TIPI_VERSION: 0\.0\.0\n", "      TIPI_VERSION: $(VERSION)\n", content); \
+content = re.sub(r"\$$\{RUNTIPI_[A-Z_]+PATH:-\.internal\}", ".", content); \
+content = re.sub(r"ROOT_FOLDER_HOST: \$$\{PWD\}/\.internal", "ROOT_FOLDER_HOST: $${PWD}", content); \
+content = re.sub(r"\./\.internal/(traefik|cache)", r"./\1", content); \
+open("docker-compose.yml", "w").write(content)'
 	rm docker-compose.yml.tmp
 
 override_dh_auto_clean:
