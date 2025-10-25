@@ -26,7 +26,7 @@ The Runtipi service is installed via a Debian package that:
 2. Downloads the `docker-compose.yml` file for the Runtipi stack
 3. Installs both files to `/opt/runtipi/`
 4. Installs the systemd service file to `/lib/systemd/system/runtipi.service`
-5. Creates the complete directory structure (`.internal/media`, `.internal/state`, etc.)
+5. Creates the complete directory structure (`media`, `state`, `repos`, `apps`, etc.)
 6. Creates a default `.env` configuration file
 7. Enables and starts the runtipi service
 
@@ -56,17 +56,18 @@ Once running, Runtipi is accessible at:
 
 ## Data Location
 
-Runtipi stores its data in `/opt/runtipi/`, including:
-- `.internal/media` - Media files
-- `.internal/state` - Application state
-- `.internal/repos` - App repository cache
-- `.internal/apps` - Installed applications
-- `.internal/app-data` - Application data
-- `.internal/logs` - Service logs
-- `.internal/traefik` - Reverse proxy configuration
-- `.internal/user-config` - User configurations
-- `.internal/backups` - Backup files
-- `.internal/cache` - Build and runtime cache
+Runtipi stores its data in `/opt/runtipi/`, using a flat directory structure:
+- `media/` - Media files shared across apps
+- `state/` - Application state and settings
+- `repos/` - App store repository cache
+- `apps/` - Installed application configurations
+- `app-data/` - Application data (organized by store and app)
+- `logs/` - Service logs
+- `traefik/` - Reverse proxy configuration and SSL certificates
+- `user-config/` - User-customized app configurations
+- `backups/` - Backup files in .tar.gz format
+- `cache/` - Build and runtime cache
+- `data/` - Runtipi's own data (PostgreSQL, Redis)
 - `.env` - Environment configuration
 
 ## Architecture

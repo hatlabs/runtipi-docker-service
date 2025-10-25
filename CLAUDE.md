@@ -55,7 +55,7 @@ This Debian package bundles Runtipi as a Docker Compose stack with systemd manag
    - `runtipi-cli` - CLI tool
    - `docker-compose.yml` - Stack definition
 5. Systemd service installed to `/lib/systemd/system/runtipi.service`
-6. Directory structure created in `.internal/` (media, state, repos, apps, etc.)
+6. Flat directory structure created (media, state, repos, apps, app-data, etc.)
 7. Default `.env` file created
 
 ## Development
