@@ -10,6 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Creating or modifying git tags
 - Running destructive git operations
 
+**Branch Workflow:**
+- **NEVER push directly to main** - Always create a branch and PR
+- Create feature branches for changes
+- Push feature branches and create PRs
+- Only merge to main via approved PRs
+
 ## Overview
 
 Runtipi provides a user-friendly web interface for Docker container management and self-hosted application deployment:
