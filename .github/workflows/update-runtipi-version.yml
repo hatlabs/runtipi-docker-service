@@ -1,0 +1,99 @@
+name: Update Runtipi Version
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Run nightly at 2 AM UTC
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Get latest Runtipi release
+        id: runtipi-version
+        run: |
+          # Fetch latest release tag from GitHub API
+          LATEST_TAG=$(curl -s https://api.github.com/repos/runtipi/runtipi/releases/latest | jq -r .tag_name)
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest Runtipi version: $LATEST_TAG"
+
+      - name: Read current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(cat VERSION)
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          LATEST="${{ steps.runtipi-version.outputs.latest_tag }}"
+          CURRENT="${{ steps.current-version.outputs.current_version }}"
+
+          if [ "$LATEST" != "$CURRENT" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "Version update needed: $CURRENT -> $LATEST"
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "Already on latest version: $CURRENT"
+          fi
+
+      - name: Update version files
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          NEW_VERSION="${{ steps.runtipi-version.outputs.latest_tag }}"
+          NEW_VERSION_NUMBER="${NEW_VERSION#v}"  # Remove 'v' prefix for debian changelog
+
+          # Update VERSION file
+          echo "$NEW_VERSION" > VERSION
+
+          # Update debian/changelog
+          export DEBEMAIL="info@hatlabs.fi"
+          export DEBFULLNAME="Hat Labs CI"
+          dch --newversion "$NEW_VERSION_NUMBER" \
+              --distribution trixie \
+              --force-distribution \
+              "Update to Runtipi $NEW_VERSION"
+
+          # Update .bumpversion.cfg
+          sed -i "s/^current_version = .*/current_version = $NEW_VERSION/" .bumpversion.cfg
+
+      - name: Create Pull Request
+        if: steps.compare.outputs.needs_update == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update Runtipi to ${{ steps.runtipi-version.outputs.latest_tag }}"
+          title: "Update Runtipi to ${{ steps.runtipi-version.outputs.latest_tag }}"
+          body: |
+            ## Automated Runtipi Version Update
+
+            This PR updates the Runtipi CLI version from ${{ steps.current-version.outputs.current_version }} to ${{ steps.runtipi-version.outputs.latest_tag }}.
+
+            ### Changes
+            - Updated `VERSION` file
+            - Updated `debian/changelog`
+            - Updated `.bumpversion.cfg`
+
+            ### Source
+            - Upstream release: https://github.com/runtipi/runtipi/releases/tag/${{ steps.runtipi-version.outputs.latest_tag }}
+
+            ### Testing
+            - [ ] Build package successfully
+            - [ ] Test installation on Halos
+            - [ ] Verify web UI is accessible
+            - [ ] Test app installation from store
+
+            ---
+            *This PR was created automatically by the update-runtipi-version workflow.*
+          branch: update-runtipi-${{ steps.runtipi-version.outputs.latest_tag }}
+          delete-branch: true
+          labels: |
+            automated
+            dependencies

@@ -1,0 +1,54 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Create /opt/runtipi directory structure
+        mkdir -p /opt/runtipi/.internal/media
+        mkdir -p /opt/runtipi/.internal/state
+        mkdir -p /opt/runtipi/.internal/repos
+        mkdir -p /opt/runtipi/.internal/apps
+        mkdir -p /opt/runtipi/.internal/logs
+        mkdir -p /opt/runtipi/.internal/traefik
+        mkdir -p /opt/runtipi/.internal/user-config
+        mkdir -p /opt/runtipi/.internal/app-data
+        mkdir -p /opt/runtipi/.internal/backups
+        mkdir -p /opt/runtipi/.internal/cache
+
+        # Create default .env file if it doesn't exist
+        if [ ! -f /opt/runtipi/.env ]; then
+            cat > /opt/runtipi/.env << 'EOF'
+# Runtipi Configuration
+# See https://runtipi.io/docs for more information
+
+# Log level (debug, info, warn, error)
+LOG_LEVEL=info
+
+# Domain configuration (optional)
+# DOMAIN=example.com
+# LOCAL_DOMAIN=tipi.local
+EOF
+        fi
+
+        # Reload systemd daemon to pick up the new service
+        systemctl daemon-reload
+
+        # Enable the service to start on boot
+        systemctl enable runtipi.service
+
+        # Start the service
+        systemctl start runtipi.service
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

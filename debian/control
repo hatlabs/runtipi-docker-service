@@ -1,0 +1,22 @@
+Source: runtipi-docker-service
+Section: admin
+Priority: optional
+Maintainer: Hat Labs <info@hatlabs.fi>
+Build-Depends: debhelper-compat (= 13), curl, ca-certificates, python3
+Standards-Version: 4.6.2
+Homepage: https://github.com/hatlabs/runtipi-docker-service
+
+Package: runtipi-docker-service
+Architecture: all
+Depends: ${misc:Depends}, docker-ce-cli, docker-compose-plugin
+Description: Runtipi homeserver orchestrator with systemd integration
+ Runtipi provides a user-friendly web interface for managing Docker
+ containers and self-hosted applications. This package installs the
+ runtipi-cli tool and configures it as a systemd service.
+ .
+ Runtipi provides:
+  - Container management through web UI
+  - App store with 300+ pre-configured applications
+  - Simple Docker orchestration for self-hosting
+ .
+ The web interface is accessible on port 80 after installation.

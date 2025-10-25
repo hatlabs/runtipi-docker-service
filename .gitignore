@@ -1,0 +1,24 @@
+# Build artifacts
+*.deb
+*.dsc
+*.buildinfo
+*.changes
+*.tar.xz
+packages/
+
+# Debian build artifacts
+debian/.debhelper/
+debian/runtipi-docker-service/
+debian/debhelper-build-stamp
+debian/files
+debian/*.log
+debian/*.substvars
+debian/*.debhelper
+
+# Downloaded binaries and files
+runtipi-cli
+runtipi-cli-*.tar.gz
+docker-compose.yml
+
+# Docker
+.env

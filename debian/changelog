@@ -1,0 +1,18 @@
+runtipi-docker-service (4.5.2) trixie; urgency=medium
+
+  * Update to Runtipi v4.5.2
+  * Fixed TIPI_VERSION environment variable
+  * Docker compose uses pre-built images from ghcr.io
+
+ -- Hat Labs <info@hatlabs.fi>  Fri, 25 Oct 2025 14:35:00 +0300
+
+runtipi-docker-service (3.8.1) trixie; urgency=medium
+
+  * Initial release
+  * Runtipi CLI v3.8.1
+  * Systemd service for runtipi-cli lifecycle management
+  * Installs to /opt/runtipi with persistent data storage
+  * Web UI accessible on port 80
+  * Package version tracks runtipi releases
+
+ -- Hat Labs <info@hatlabs.fi>  Fri, 25 Oct 2025 13:00:00 +0300

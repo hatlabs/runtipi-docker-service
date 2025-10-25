@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    purge)
+        # Stop the Runtipi service
+        systemctl stop runtipi.service || true
+        systemctl disable runtipi.service || true
+
+        # Stop all containers
+        cd /opt/runtipi && docker compose down -v || true
+
+        # Remove /opt/runtipi directory and all data
+        rm -rf /opt/runtipi
+
+        # Reload systemd daemon
+        systemctl daemon-reload || true
+        ;;
+
+    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        # Stop the service but keep configuration and data
+        systemctl stop runtipi.service || true
+        systemctl disable runtipi.service || true
+        cd /opt/runtipi && docker compose down || true
+        ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+
+# Get version from VERSION file
+VERSION := $(shell cat VERSION)
+
+# Determine architecture
+DEB_HOST_ARCH ?= $(shell dpkg --print-architecture)
+ifeq ($(DEB_HOST_ARCH),amd64)
+    RUNTIPI_ARCH := x86_64
+else ifeq ($(DEB_HOST_ARCH),arm64)
+    RUNTIPI_ARCH := aarch64
+else
+    $(error Unsupported architecture: $(DEB_HOST_ARCH))
+endif
+
+RUNTIPI_ASSET := runtipi-cli-linux-$(RUNTIPI_ARCH).tar.gz
+RUNTIPI_CLI_URL := https://github.com/runtipi/runtipi/releases/download/$(VERSION)/$(RUNTIPI_ASSET)
+RUNTIPI_COMPOSE_URL := https://raw.githubusercontent.com/runtipi/runtipi/$(VERSION)/docker-compose.prod.yml
+
+override_dh_auto_build:
+	# Download runtipi-cli binary
+	curl -L "$(RUNTIPI_CLI_URL)" -o runtipi-cli.tar.gz
+	tar -xzf runtipi-cli.tar.gz
+	# Find the extracted binary and move it to runtipi-cli
+	@EXTRACTED=$$(tar -tzf runtipi-cli.tar.gz | head -n 1 | cut -f1 -d"/"); \
+	mv "$${EXTRACTED}" runtipi-cli
+	rm runtipi-cli.tar.gz
+	chmod +x runtipi-cli
+	# Download docker-compose.prod.yml and convert to use pre-built images
+	curl -L "$(RUNTIPI_COMPOSE_URL)" -o docker-compose.yml.tmp
+	# Use Python to replace the build section with image reference and set TIPI_VERSION
+	python3 -c 'import re; content = open("docker-compose.yml.tmp").read(); content = re.sub(r"(  runtipi:\n)    build:.*?(\n    depends_on:)", r"\1    image: ghcr.io/runtipi/runtipi:$(VERSION)\2", content, flags=re.DOTALL); content = re.sub(r"      - \./docker-compose\.prod\.yml:/data/docker-compose\.yml\n", "", content); content = re.sub(r"      LOCAL: true\n", "", content); content = re.sub(r"      TIPI_VERSION: 0\.0\.0\n", "      TIPI_VERSION: $(VERSION)\n", content); open("docker-compose.yml", "w").write(content)'
+	rm docker-compose.yml.tmp
+
+override_dh_auto_clean:
+	rm -f runtipi-cli runtipi-cli.tar.gz docker-compose.yml
+
+%:
+	dh $@
