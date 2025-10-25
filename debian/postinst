@@ -28,6 +28,10 @@ LOG_LEVEL=info
 # Domain configuration (optional)
 # DOMAIN=example.com
 # LOCAL_DOMAIN=tipi.local
+
+# App data path - set to root folder for flat directory structure
+# This matches the official runtipi-cli behavior
+RUNTIPI_APP_DATA_PATH=/opt/runtipi
 EOF
         fi
 

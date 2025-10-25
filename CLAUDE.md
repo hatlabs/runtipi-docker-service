@@ -279,6 +279,36 @@ The service:
 - **CLI purpose**: Bundled for user convenience, not used by systemd
 - **Docker requirement**: Full Docker Compose stack (reverse proxy, database, queue, app)
 
+### Path Configuration
+
+**Critical:** Runtipi's upstream docker-compose uses `.internal/` subdirectories for all data storage. This package transforms those to use a flat directory structure directly under `/opt/runtipi/` to match the official runtipi-cli behavior.
+
+**How it works (matching official runtipi-cli):**
+
+1. `debian/rules` transforms `docker-compose.prod.yml` at build time:
+   - Changes `${RUNTIPI_*_PATH:-.internal}` to `${RUNTIPI_*_PATH:-.}` in volume mounts
+   - Changes `./.internal/` paths to `./`
+   - Result: Volume mounts like `${RUNTIPI_APP_DATA_PATH:-.}/app-data:/app-data`
+
+2. `debian/postinst` sets minimal environment variable in `.env`:
+   - Only sets `RUNTIPI_APP_DATA_PATH=/opt/runtipi` (the root folder)
+   - Other PATH variables (`RUNTIPI_MEDIA_PATH`, etc.) are left unset
+   - When unset, they default to `.` (current directory) in docker-compose
+
+3. Volume mount expansion (with WorkingDirectory=/opt/runtipi):
+   - `${RUNTIPI_APP_DATA_PATH:-.}/app-data` → `/opt/runtipi/app-data` (absolute path)
+   - `${RUNTIPI_MEDIA_PATH:-.}/media` → `./media` → `/opt/runtipi/media` (relative path)
+   - All paths resolve to subdirectories under `/opt/runtipi/`
+
+**Result:** All data is stored in flat `/opt/runtipi/` subdirectories:
+- `/opt/runtipi/app-data/`
+- `/opt/runtipi/media/`
+- `/opt/runtipi/state/`
+- `/opt/runtipi/repos/`
+- etc.
+
+This exactly matches the official runtipi-cli behavior, minimizing friction with upstream.
+
 ## Workflow Integration
 
 ### GitHub Actions
