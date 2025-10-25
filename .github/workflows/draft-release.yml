@@ -1,0 +1,117 @@
+name: draft-release
+
+on:
+  workflow_run:
+    workflows: ["build"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  create-draft-release:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Read version from debian/changelog
+      id: version
+      run: |
+        # Extract version from debian/changelog (includes Debian revision)
+        VERSION=$(dpkg-parsechangelog -S Version)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Found version: $VERSION"
+
+    - name: Check if release exists and if it's published
+      id: check_release
+      run: |
+        if gh release view "v${{ steps.version.outputs.version }}" &>/dev/null; then
+          # Release exists, check if it's a draft
+          IS_DRAFT=$(gh release view "v${{ steps.version.outputs.version }}" --json isDraft --jq '.isDraft')
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "delete_existing=true" >> $GITHUB_OUTPUT
+            echo "Existing draft release found - will delete and recreate"
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "delete_existing=false" >> $GITHUB_OUTPUT
+            echo "Published release v${{ steps.version.outputs.version }} already exists - skipping"
+          fi
+        else
+          echo "skip=false" >> $GITHUB_OUTPUT
+          echo "delete_existing=false" >> $GITHUB_OUTPUT
+          echo "No existing release found"
+        fi
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Delete existing draft release
+      if: steps.check_release.outputs.delete_existing == 'true'
+      run: |
+        echo "Deleting existing draft release v${{ steps.version.outputs.version }}"
+        gh release delete "v${{ steps.version.outputs.version }}" --yes
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Download build artifacts
+      if: steps.check_release.outputs.skip == 'false'
+      uses: actions/download-artifact@v4
+      with:
+        name: debian-packages-${{ steps.version.outputs.version }}
+        path: packages
+        github-token: ${{ github.token }}
+        run-id: ${{ github.event.workflow_run.id }}
+
+    - name: Create draft release
+      if: steps.check_release.outputs.skip == 'false'
+      run: |
+        # Extract the latest changelog entry
+        CHANGELOG_ENTRY=$(sed -n '/^runtipi-docker-service ('${{ steps.version.outputs.version }}'/,/^runtipi-docker-service ([0-9]/p' debian/changelog | sed '$d')
+
+        # Read Runtipi version from VERSION file
+        RUNTIPI_VERSION=$(cat VERSION)
+
+        # Create release notes
+        cat > release_notes.md <<EOF
+        ## Runtipi Docker Service v${{ steps.version.outputs.version }}
+
+        This release packages Runtipi ${RUNTIPI_VERSION} as a systemd-managed Docker Compose service for easy installation on Debian-based systems.
+
+        ### Changelog
+
+        \`\`\`
+        ${CHANGELOG_ENTRY}
+        \`\`\`
+
+        ### Installation
+
+        Download the .deb package and install with:
+
+        \`\`\`bash
+        sudo dpkg -i runtipi-docker-service_${{ steps.version.outputs.version }}_all.deb
+        sudo apt-get install -f  # Install any missing dependencies
+        \`\`\`
+
+        The service will be automatically started and enabled. Access Runtipi at http://localhost:80
+
+        ### What's Included
+
+        - Runtipi ${RUNTIPI_VERSION} (4-container stack: runtipi, traefik, postgres, lavinmq)
+        - Systemd service unit for automatic startup
+        - Docker Compose configuration stored in /opt/runtipi
+        - Runtipi CLI for manual operations
+        EOF
+
+        # Create the release with the .deb package attached
+        gh release create "v${{ steps.version.outputs.version }}" \
+          --draft \
+          --title "v${{ steps.version.outputs.version }}" \
+          --notes-file release_notes.md \
+          packages/*.deb
+
+        echo "Created draft release v${{ steps.version.outputs.version }} with packages"
+      env:
+        GH_TOKEN: ${{ github.token }}
