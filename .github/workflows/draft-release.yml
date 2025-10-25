@@ -80,11 +80,21 @@ jobs:
     - name: Create draft release
       if: steps.check_release.outputs.skip == 'false'
       run: |
-        # Extract the latest changelog entry
-        CHANGELOG_ENTRY=$(sed -n '/^runtipi-docker-service ('${{ steps.version.outputs.version }}'/,/^runtipi-docker-service ([0-9]/p' debian/changelog | sed '$d')
-
         # Read Runtipi version from VERSION file
         RUNTIPI_VERSION=$(cat VERSION)
+
+        # Get the latest published release tag to compare commits
+        LAST_TAG=$(gh release list --limit 100 --json tagName,isPrerelease,isDraft --jq '.[] | select(.isDraft == false and .isPrerelease == false) | .tagName' | head -n1)
+
+        if [ -n "$LAST_TAG" ]; then
+          echo "Generating changelog since $LAST_TAG"
+          # Get commits since last release
+          CHANGELOG_COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+        else
+          echo "No previous releases found, using recent commits"
+          # Get last 10 commits if no previous release
+          CHANGELOG_COMMITS=$(git log -10 --pretty=format:"- %s" --no-merges)
+        fi
 
         # Create release notes
         cat > release_notes.md <<EOF
@@ -92,11 +102,9 @@ jobs:
 
         This release packages Runtipi ${RUNTIPI_VERSION} as a systemd-managed Docker Compose service for easy installation on Debian-based systems.
 
-        ### Changelog
+        ### Changes
 
-        \`\`\`
-        ${CHANGELOG_ENTRY}
-        \`\`\`
+        ${CHANGELOG_COMMITS}
 
         ### Installation
 
