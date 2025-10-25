@@ -136,7 +136,7 @@ For packaging-only changes (e.g., fix systemd service, update dependencies):
 | New upstream again | `v4.7.0` | `v4.5.2-3` | `v4.7.0-1` | Track new release |
 
 **Notes:**
-- `debian/changelog` in git is overwritten during build (don't manually edit)
+- `debian/changelog` is auto-generated during CI builds (not tracked in git)
 - `.bumpversion.cfg` only tracks the `VERSION` file
 - Revision numbers ensure no conflicts even with multiple builds of same upstream version
 
