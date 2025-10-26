@@ -22,3 +22,4 @@ docker-compose.yml
 
 # Docker
 .env
+CLAUDE.local.md
