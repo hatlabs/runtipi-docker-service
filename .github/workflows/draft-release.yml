@@ -93,10 +93,14 @@ jobs:
       run: |
         mkdir -p packages
         # Find .deb files in current and parent directory (dpkg-buildpackage creates them in parent)
-        find . .. -maxdepth 1 -name "*.deb" -exec cp {} packages/ \; 2>/dev/null || true
+        find . .. -maxdepth 1 -name "*.deb" -exec cp {} packages/ \; 2>/dev/null
         ls -la packages/
         echo "Found packages:"
-        ls -1 packages/*.deb 2>/dev/null || echo "No packages found"
+        if ls -1 packages/*.deb 1>/dev/null 2>&1; then
+          ls -1 packages/*.deb
+        else
+          echo "No packages found"
+        fi
 
     - name: Create draft release
       if: steps.check_release.outputs.skip == 'false'
