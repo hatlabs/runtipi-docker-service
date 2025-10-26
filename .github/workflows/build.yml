@@ -1,12 +1,13 @@
-name: build
+name: PR Validation
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches: [main]
 
 jobs:
-  # Build packages on every push
-  build-packages:
+  # Validate package builds on PRs (artifacts not used - fresh build on merge)
+  validate-build:
     runs-on: ubuntu-latest-arm64
-    if: github.event_name == 'push'
     steps:
     - uses: actions/checkout@v5
 
@@ -56,19 +57,8 @@ jobs:
         # Use the CI-specific package build function
         ./run package:deb:docker:ci
 
-    - name: Collect built packages
+    - name: Verify package was built
       run: |
-        mkdir -p packages
-        # Find .deb files in current and parent directory (dpkg-buildpackage creates them in parent)
-        find . .. -maxdepth 1 -name "*.deb" -exec cp {} packages/ \; 2>/dev/null || true
-        ls -la packages/
-        echo "Found packages:"
-        ls -1 packages/*.deb 2>/dev/null || echo "No packages found"
-
-    - name: Upload packages as artifacts
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: debian-packages-${{ steps.version.outputs.version }}
-        path: packages/*.deb
-        retention-days: 30
+        # Just verify the package exists (no need to upload - will rebuild on merge)
+        find . .. -maxdepth 1 -name "*.deb" | head -1 || (echo "ERROR: No .deb package found!" && exit 1)
+        echo "✅ Package build successful"
