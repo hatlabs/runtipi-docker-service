@@ -22,6 +22,9 @@ case "$1" in
 # Runtipi Configuration
 # See https://runtipi.io/docs for more information
 
+# CRITICAL: Root folder host path (required when not using runtipi-cli)
+ROOT_FOLDER_HOST=/opt/runtipi
+
 # Log level (debug, info, warn, error)
 LOG_LEVEL=info
 
