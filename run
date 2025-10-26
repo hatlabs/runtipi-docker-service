@@ -7,6 +7,26 @@
 # See https://death.andgravity.com/run-sh
 # for an explanation of how it works and why it's useful.
 
+# First, set up the environment.
+# (Check the notes at the end when changing this.)
+
+set -o nounset
+set -o pipefail
+set -o errexit
+
+# Enable this to echo commands as they are executed.
+#set -o xtrace
+
+# Change the current directory to the project root.
+PROJECT_ROOT=${0%/*}
+if [[ $0 != $PROJECT_ROOT && $PROJECT_ROOT != "" ]]; then
+  cd "$PROJECT_ROOT"
+fi
+readonly PROJECT_ROOT=$(pwd)
+
+# Store the absolute path to this script (useful for recursion).
+readonly SCRIPT="$PROJECT_ROOT/$(basename "$0")"
+
 ################################################################################
 # Core Commands
 
@@ -158,11 +178,22 @@ function help {
   echo "Usage: ./run <command> [arguments...]"
 }
 
-# If no command specified, show help
-if [ $# -eq 0 ]; then
-  help
-  exit 0
-fi
+################################################################################
+# Commands end.
 
-# Run the specified command
-"$@"
+# Dispatch to command. A simpler version would be just "$@" (with the quotes!).
+
+TIMEFORMAT=$'\nTask completed in %3lR'
+time "${@:-help}"
+
+# Some dev notes for this script.
+#
+# The commands *require*:
+#
+# * The current working directory is the project root.
+# * The shell options and globals are set as they are.
+#
+# Inspired by the following:
+#  - https://death.andgravity.com/run-sh
+#  - http://www.oilshell.org/blog/2020/02/good-parts-sketch.html
+#  - https://www.youtube.com/watch?v=SdmYd5hJISM&t=7s
