@@ -26,22 +26,13 @@ override_dh_auto_build:
 	mv "$${EXTRACTED}" runtipi-cli
 	rm runtipi-cli.tar.gz
 	chmod +x runtipi-cli
-	# Download docker-compose.prod.yml and convert to use pre-built images
+	# Download docker-compose.prod.yml and replace build with pre-built image
 	curl -L "$(RUNTIPI_COMPOSE_URL)" -o docker-compose.yml.tmp
-	# Use Python to:
-	# 1. Replace build section with image reference
-	# 2. Change .internal path defaults to . (current directory)
-	# 3. Set TIPI_VERSION
-	# This matches what the official runtipi-cli does
+	# Replace build section with image reference (can't build without source)
+	# runtipi-cli prepare handles all other transformations (.internal paths, etc)
 	python3 -c 'import re; \
 content = open("docker-compose.yml.tmp").read(); \
 content = re.sub(r"(  runtipi:\n)    build:.*?(\n    depends_on:)", r"\1    image: ghcr.io/runtipi/runtipi:$(VERSION)\2", content, flags=re.DOTALL); \
-content = re.sub(r"      - \./docker-compose\.prod\.yml:/data/docker-compose\.yml\n", "      - ./docker-compose.yml:/data/docker-compose.yml\n", content); \
-content = re.sub(r"      LOCAL: true\n", "", content); \
-content = re.sub(r"      ROOT_FOLDER_HOST: .*\n", "", content); \
-content = re.sub(r"      TIPI_VERSION: 0\.0\.0\n", "      TIPI_VERSION: $(VERSION)\n", content); \
-content = re.sub(r":-\.internal\}", ":-.}", content); \
-content = re.sub(r"/\.internal/", "/", content); \
 open("docker-compose.yml", "w").write(content)'
 	rm docker-compose.yml.tmp
 
