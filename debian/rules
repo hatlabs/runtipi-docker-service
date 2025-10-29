@@ -26,15 +26,6 @@ override_dh_auto_build:
 	mv "$${EXTRACTED}" runtipi-cli
 	rm runtipi-cli.tar.gz
 	chmod +x runtipi-cli
-	# Download docker-compose.prod.yml and replace build with pre-built image
-	curl -L "$(RUNTIPI_COMPOSE_URL)" -o docker-compose.yml.tmp
-	# Replace build section with image reference (can't build without source)
-	# runtipi-cli prepare handles all other transformations (.internal paths, etc)
-	python3 -c 'import re; \
-content = open("docker-compose.yml.tmp").read(); \
-content = re.sub(r"(  runtipi:\n)    build:.*?(\n    depends_on:)", r"\1    image: ghcr.io/runtipi/runtipi:$(VERSION)\2", content, flags=re.DOTALL); \
-open("docker-compose.yml", "w").write(content)'
-	rm docker-compose.yml.tmp
 
 override_dh_auto_clean:
 	rm -f runtipi-cli runtipi-cli.tar.gz docker-compose.yml
