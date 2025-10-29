@@ -1,3 +1,2 @@
 runtipi-cli opt/runtipi/
-docker-compose.yml opt/runtipi/
 runtipi.service lib/systemd/system/
