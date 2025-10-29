@@ -3,40 +3,9 @@ set -e
 
 case "$1" in
     configure)
-        # Create /opt/runtipi directory structure (flat, matching official installer)
-        mkdir -p /opt/runtipi/media
-        mkdir -p /opt/runtipi/state
-        mkdir -p /opt/runtipi/repos
-        mkdir -p /opt/runtipi/apps
-        mkdir -p /opt/runtipi/logs
-        mkdir -p /opt/runtipi/traefik
-        mkdir -p /opt/runtipi/user-config
-        mkdir -p /opt/runtipi/app-data
-        mkdir -p /opt/runtipi/backups
-        mkdir -p /opt/runtipi/cache
-        mkdir -p /opt/runtipi/data
-
-        # Create default .env file if it doesn't exist
-        if [ ! -f /opt/runtipi/.env ]; then
-            cat > /opt/runtipi/.env << 'EOF'
-# Runtipi Configuration
-# See https://runtipi.io/docs for more information
-
-# CRITICAL: Root folder host path (required when not using runtipi-cli)
-ROOT_FOLDER_HOST=/opt/runtipi
-
-# Log level (debug, info, warn, error)
-LOG_LEVEL=info
-
-# Domain configuration (optional)
-# DOMAIN=example.com
-# LOCAL_DOMAIN=tipi.local
-
-# App data path - set to root folder for flat directory structure
-# This matches the official runtipi-cli behavior
-RUNTIPI_APP_DATA_PATH=/opt/runtipi
-EOF
-        fi
+        # Use runtipi-cli prepare to set up directory structure and configuration
+        # This matches the official runtipi installation process
+        cd /opt/runtipi && ./runtipi-cli prepare
 
         # Reload systemd daemon to pick up the new service
         systemctl daemon-reload
