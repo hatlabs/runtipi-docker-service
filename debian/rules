@@ -27,7 +27,7 @@ override_dh_auto_build:
 	chmod +x runtipi-cli
 
 override_dh_auto_clean:
-	rm -f runtipi-cli runtipi-cli.tar.gz docker-compose.yml
+	rm -f runtipi-cli runtipi-cli.tar.gz
 
 %:
 	dh $@

@@ -5,6 +5,7 @@ case "$1" in
     configure)
         # Use runtipi-cli prepare to set up directory structure and configuration
         # This matches the official runtipi installation process
+        mkdir -p /opt/runtipi
         cd /opt/runtipi && ./runtipi-cli prepare
 
         # Reload systemd daemon to pick up the new service
