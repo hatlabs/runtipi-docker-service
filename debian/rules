@@ -15,7 +15,6 @@ endif
 
 RUNTIPI_ASSET := runtipi-cli-linux-$(RUNTIPI_ARCH).tar.gz
 RUNTIPI_CLI_URL := https://github.com/runtipi/runtipi/releases/download/$(VERSION)/$(RUNTIPI_ASSET)
-RUNTIPI_COMPOSE_URL := https://raw.githubusercontent.com/runtipi/runtipi/$(VERSION)/docker-compose.prod.yml
 
 override_dh_auto_build:
 	# Download runtipi-cli binary
