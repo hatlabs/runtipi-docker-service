@@ -14,32 +14,10 @@ jobs:
     - name: Auto-increment version and update changelog
       env:
         GH_TOKEN: ${{ github.token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        # Read upstream version from VERSION file
-        UPSTREAM_VERSION=$(cat VERSION | sed 's/^v//')
-        echo "Upstream version: $UPSTREAM_VERSION"
-
-        # Find the next available revision number
-        REVISION=1
-        while gh release view "v${UPSTREAM_VERSION}-${REVISION}" &>/dev/null; do
-          echo "Release v${UPSTREAM_VERSION}-${REVISION} exists, trying next..."
-          REVISION=$((REVISION + 1))
-        done
-
-        PACKAGE_VERSION="${UPSTREAM_VERSION}-${REVISION}"
+        PACKAGE_VERSION=$(./scripts/generate-changelog.sh)
         echo "Package version will be: $PACKAGE_VERSION"
-
-        # Generate debian/changelog entry
-        TIMESTAMP=$(date -R)
-        cat > debian/changelog << EOF
-        runtipi-docker-service ($PACKAGE_VERSION) trixie; urgency=medium
-
-          * Automated release v$PACKAGE_VERSION
-          * Runtipi upstream version: v$UPSTREAM_VERSION
-          * For detailed changes: https://github.com/${{ github.repository }}/commits/main
-
-         -- Hat Labs <info@hatlabs.fi>  $TIMESTAMP
-        EOF
 
         echo "Generated debian/changelog:"
         cat debian/changelog
