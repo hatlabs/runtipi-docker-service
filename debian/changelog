@@ -1,3 +1,9 @@
+runtipi-docker-service (4.6.4) trixie; urgency=medium
+
+  * Update to Runtipi v4.6.4
+
+ -- Hat Labs CI <info@hatlabs.fi>  Thu, 13 Nov 2025 02:32:39 +0000
+
 runtipi-docker-service (4.6.2) trixie; urgency=medium
 
   * Update to Runtipi v4.6.2
